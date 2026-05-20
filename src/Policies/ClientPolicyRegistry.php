@@ -35,7 +35,7 @@ final readonly class ClientPolicyRegistry
     private function presets(): array
     {
         return $this->presets ?? [
-            new KrbsClientPolicyPreset,
+            new Enterprise365ClientPolicyPreset,
             new BaseClientPolicyPreset,
         ];
     }

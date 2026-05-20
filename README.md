@@ -899,8 +899,8 @@ Client-level policy overrides keyed by `client_code`.
 
 Example built-in preset keys:
 
-- `krbs`
-- `krbs-rohq`
+- `enterprise-365`
+- `regional-hq-365`
 
 ### `strategies`
 

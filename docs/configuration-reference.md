@@ -87,8 +87,8 @@ Use `presets` when:
 
 Built-in preset keys currently include:
 
-- `krbs`
-- `krbs-rohq`
+- `enterprise-365`
+- `regional-hq-365`
 
 ## `strategies`
 
@@ -199,4 +199,3 @@ Use this decision guide:
 - [Policies Guide](policies.md)
 - [Extending the Package](extending.md)
 - [Laravel Implementation Guide](laravel-implementation.md)
-

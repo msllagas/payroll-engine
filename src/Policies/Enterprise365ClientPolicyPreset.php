@@ -4,17 +4,17 @@ namespace QuillBytes\PayrollEngine\Policies;
 
 use QuillBytes\PayrollEngine\Contracts\ClientPolicyPreset;
 
-final class KrbsClientPolicyPreset implements ClientPolicyPreset
+final class Enterprise365ClientPolicyPreset implements ClientPolicyPreset
 {
     public function supports(string $clientCode): bool
     {
-        return in_array($clientCode, ['krbs', 'krbs-rohq'], true);
+        return in_array($clientCode, ['enterprise-365', 'regional-hq-365'], true);
     }
 
     public function defaults(): array
     {
         return [
-            'client_code' => 'krbs',
+            'client_code' => 'enterprise-365',
             'eemr_factor' => 365,
             'hours_per_day' => 8,
             'work_days_per_year' => 365,
