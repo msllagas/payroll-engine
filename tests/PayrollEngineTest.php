@@ -137,14 +137,14 @@ it('computes base payroll for a regular semi-monthly run', function () {
         ->and($result->separatePayouts)->toBeEmpty();
 });
 
-it('applies KRBS overrides for manual overtime, separate payouts, and projected tax', function () {
+it('applies enterprise 365 overrides for manual overtime, separate payouts, and projected tax', function () {
     $result = engine()->compute(
         baseCompany([
-            'name' => 'KRBS',
-            'client_code' => 'krbs',
-            'prepared_by' => ['krbs.preparer'],
-            'approvers' => ['krbs.approver'],
-            'administrators' => ['krbs.admin'],
+            'name' => 'Enterprise 365',
+            'client_code' => 'enterprise-365',
+            'prepared_by' => ['enterprise365.preparer'],
+            'approvers' => ['enterprise365.approver'],
+            'administrators' => ['enterprise365.admin'],
         ]),
         baseEmployee([
             'employee_number' => 'EMP-002',
@@ -164,7 +164,7 @@ it('applies KRBS overrides for manual overtime, separate payouts, and projected 
             'manual_overtime_pay' => 1200,
             'adjustments' => [
                 [
-                    'label' => 'KRBS Taxable Adjustment',
+                    'label' => 'Enterprise 365 Taxable Adjustment',
                     'amount' => 800,
                     'taxable' => true,
                 ],

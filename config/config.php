@@ -113,7 +113,7 @@ return [
     |
     */
     'presets' => [
-        'krbs' => [
+        'enterprise-365' => [
             'frequency' => 'semi_monthly',
             'hours_per_day' => 8,
             'work_days_per_year' => 365,
@@ -134,7 +134,7 @@ return [
             'rest_day_holiday_ot_premium' => 3.38,
             'night_shift_differential_premium' => 0.10,
         ],
-        'krbs-rohq' => [
+        'regional-hq-365' => [
             'frequency' => 'semi_monthly',
             'hours_per_day' => 8,
             'work_days_per_year' => 365,
