@@ -6,7 +6,9 @@ use Money\Money;
 use QuillBytes\PayrollEngine\Contracts\OvertimeCalculator as OvertimeCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\PagIbigContributionCalculator as PagIbigContributionCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\PayrollWorkflow as PayrollWorkflowContract;
+use QuillBytes\PayrollEngine\Contracts\PhilHealthContributionCalculator as PhilHealthContributionCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\RateCalculator as RateCalculatorContract;
+use QuillBytes\PayrollEngine\Contracts\SssContributionCalculator as SssContributionCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\WithholdingTaxCalculator as WithholdingTaxCalculatorContract;
 use QuillBytes\PayrollEngine\Data\CompanyProfile;
 use QuillBytes\PayrollEngine\Data\EmployeeProfile;
@@ -15,7 +17,9 @@ use QuillBytes\PayrollEngine\Data\PayrollInput;
 use QuillBytes\PayrollEngine\Data\PayrollLine;
 use QuillBytes\PayrollEngine\Data\PayrollPeriod;
 use QuillBytes\PayrollEngine\Data\PayrollResult;
+use QuillBytes\PayrollEngine\Data\PhilHealthContributionResult;
 use QuillBytes\PayrollEngine\Data\RateSnapshot;
+use QuillBytes\PayrollEngine\Data\SssContributionResult;
 use QuillBytes\PayrollEngine\PayrollEngine;
 use QuillBytes\PayrollEngine\Support\MoneyHelper;
 
@@ -130,6 +134,42 @@ function clientSpecificPagIbigCalculator(): PagIbigContributionCalculatorContrac
                 separateDeductions: [
                     new PayrollLine('deduction', 'Client Pag-IBIG Loan', MoneyHelper::fromNumeric(75)),
                 ],
+            );
+        }
+    };
+}
+
+function clientSpecificSssCalculator(): SssContributionCalculatorContract
+{
+    return new class implements SssContributionCalculatorContract
+    {
+        public function calculate(
+            CompanyProfile $company,
+            EmployeeProfile $employee,
+            PayrollInput $input,
+            int $periodDivisor = 1,
+        ): SssContributionResult {
+            return new SssContributionResult(
+                employee: new PayrollLine('employee_contribution', 'Client SSS Contribution', MoneyHelper::fromNumeric(444)),
+                employer: new PayrollLine('employer_contribution', 'Client Employer SSS Contribution', MoneyHelper::fromNumeric(222)),
+            );
+        }
+    };
+}
+
+function clientSpecificPhilHealthCalculator(): PhilHealthContributionCalculatorContract
+{
+    return new class implements PhilHealthContributionCalculatorContract
+    {
+        public function calculate(
+            CompanyProfile $company,
+            EmployeeProfile $employee,
+            PayrollInput $input,
+            int $periodDivisor = 1,
+        ): PhilHealthContributionResult {
+            return new PhilHealthContributionResult(
+                employee: new PayrollLine('employee_contribution', 'Client PhilHealth Contribution', MoneyHelper::fromNumeric(555)),
+                employer: new PayrollLine('employer_contribution', 'Client Employer PhilHealth Contribution', MoneyHelper::fromNumeric(333)),
             );
         }
     };
@@ -293,4 +333,37 @@ it('allows a client to replace only the pagibig strategy through configuration',
         ->and(MoneyHelper::toFloat($result->employeeContributions[2]->amount))->toBe(333.00)
         ->and(MoneyHelper::toFloat($result->employerContributions[2]->amount))->toBe(111.00)
         ->and($clientPagIbigLoans)->toHaveCount(1);
+});
+
+it('allows a client to replace sss and philhealth strategies through configuration', function () {
+    $result = strategyEngine([
+        'strategies' => [
+            'clients' => [
+                'statutory-client' => [
+                    'sss' => clientSpecificSssCalculator(),
+                    'philhealth' => clientSpecificPhilHealthCalculator(),
+                ],
+            ],
+        ],
+    ])->compute(
+        strategyCompany([
+            'client_code' => 'statutory-client',
+        ]),
+        strategyEmployee(),
+        [
+            'period' => [
+                'key' => '2026-STATUTORY-CLIENT',
+                'start_date' => '2026-04-01',
+                'end_date' => '2026-04-15',
+                'release_date' => '2026-04-15',
+            ],
+        ],
+    );
+
+    expect($result->employeeContributions[0]->label)->toBe('Client SSS Contribution')
+        ->and(MoneyHelper::toFloat($result->employeeContributions[0]->amount))->toBe(444.00)
+        ->and(MoneyHelper::toFloat($result->employerContributions[0]->amount))->toBe(222.00)
+        ->and($result->employeeContributions[1]->label)->toBe('Client PhilHealth Contribution')
+        ->and(MoneyHelper::toFloat($result->employeeContributions[1]->amount))->toBe(555.00)
+        ->and(MoneyHelper::toFloat($result->employerContributions[1]->amount))->toBe(333.00);
 });

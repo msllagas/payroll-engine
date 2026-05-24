@@ -327,6 +327,286 @@ it('lets a monthly pagibig employee defer deduction until the monthly due run ev
         ->and(MoneyHelper::toFloat($secondCutoff->employerContributions[2]->amount))->toBe(100.00);
 });
 
+it('lets a monthly sss employee defer deduction until the monthly due run even when company statutory defaults split', function () {
+    $firstCutoff = engine()->compute(
+        baseCompany([
+            'split_monthly_statutory_across_periods' => true,
+        ]),
+        baseEmployee([
+            'sss_schedule' => 'monthly',
+        ]),
+        [
+            'period' => [
+                'key' => '2026-04-SSS-MONTHLY-A',
+                'start_date' => '2026-04-01',
+                'end_date' => '2026-04-15',
+                'release_date' => '2026-04-15',
+            ],
+        ],
+    );
+
+    $secondCutoff = engine()->compute(
+        baseCompany([
+            'split_monthly_statutory_across_periods' => true,
+        ]),
+        baseEmployee([
+            'sss_schedule' => 'monthly',
+        ]),
+        [
+            'period' => [
+                'key' => '2026-04-SSS-MONTHLY-B',
+                'start_date' => '2026-04-16',
+                'end_date' => '2026-04-30',
+                'release_date' => '2026-04-30',
+            ],
+        ],
+    );
+
+    expect(MoneyHelper::toFloat($firstCutoff->employeeContributions[0]->amount))->toBe(0.00)
+        ->and(MoneyHelper::toFloat($firstCutoff->employerContributions[0]->amount))->toBe(0.00)
+        ->and(MoneyHelper::toFloat($secondCutoff->employeeContributions[0]->amount))->toBe(1500.00)
+        ->and(MoneyHelper::toFloat($secondCutoff->employerContributions[0]->amount))->toBe(3030.00);
+});
+
+it('lets a monthly philhealth employee defer deduction until the monthly due run even when company statutory defaults split', function () {
+    $firstCutoff = engine()->compute(
+        baseCompany([
+            'split_monthly_statutory_across_periods' => true,
+        ]),
+        baseEmployee([
+            'philhealth_schedule' => 'monthly',
+        ]),
+        [
+            'period' => [
+                'key' => '2026-04-PHILHEALTH-MONTHLY-A',
+                'start_date' => '2026-04-01',
+                'end_date' => '2026-04-15',
+                'release_date' => '2026-04-15',
+            ],
+        ],
+    );
+
+    $secondCutoff = engine()->compute(
+        baseCompany([
+            'split_monthly_statutory_across_periods' => true,
+        ]),
+        baseEmployee([
+            'philhealth_schedule' => 'monthly',
+        ]),
+        [
+            'period' => [
+                'key' => '2026-04-PHILHEALTH-MONTHLY-B',
+                'start_date' => '2026-04-16',
+                'end_date' => '2026-04-30',
+                'release_date' => '2026-04-30',
+            ],
+        ],
+    );
+
+    expect(MoneyHelper::toFloat($firstCutoff->employeeContributions[1]->amount))->toBe(0.00)
+        ->and(MoneyHelper::toFloat($firstCutoff->employerContributions[1]->amount))->toBe(0.00)
+        ->and(MoneyHelper::toFloat($secondCutoff->employeeContributions[1]->amount))->toBe(750.00)
+        ->and(MoneyHelper::toFloat($secondCutoff->employerContributions[1]->amount))->toBe(750.00);
+});
+
+it('lets one employee deduct all statutory contributions on the monthly due run while company defaults remain split', function () {
+    $defaultEmployeeFirstCutoff = engine()->compute(
+        baseCompany([
+            'split_monthly_statutory_across_periods' => true,
+        ]),
+        baseEmployee([
+            'employee_number' => 'EMP-SPLIT',
+        ]),
+        [
+            'period' => [
+                'key' => '2026-04-STATUTORY-SPLIT-A',
+                'start_date' => '2026-04-01',
+                'end_date' => '2026-04-15',
+                'release_date' => '2026-04-15',
+            ],
+        ],
+    );
+
+    $monthlyEmployeeFirstCutoff = engine()->compute(
+        baseCompany([
+            'split_monthly_statutory_across_periods' => true,
+        ]),
+        baseEmployee([
+            'employee_number' => 'EMP-MONTHLY',
+            'statutory_schedule' => 'monthly',
+        ]),
+        [
+            'period' => [
+                'key' => '2026-04-STATUTORY-MONTHLY-A',
+                'start_date' => '2026-04-01',
+                'end_date' => '2026-04-15',
+                'release_date' => '2026-04-15',
+            ],
+        ],
+    );
+
+    $monthlyEmployeeSecondCutoff = engine()->compute(
+        baseCompany([
+            'split_monthly_statutory_across_periods' => true,
+        ]),
+        baseEmployee([
+            'employee_number' => 'EMP-MONTHLY',
+            'statutory_schedule' => 'monthly',
+        ]),
+        [
+            'period' => [
+                'key' => '2026-04-STATUTORY-MONTHLY-B',
+                'start_date' => '2026-04-16',
+                'end_date' => '2026-04-30',
+                'release_date' => '2026-04-30',
+            ],
+        ],
+    );
+
+    expect(MoneyHelper::toFloat($defaultEmployeeFirstCutoff->employeeContributions[0]->amount))->toBe(750.00)
+        ->and(MoneyHelper::toFloat($defaultEmployeeFirstCutoff->employeeContributions[1]->amount))->toBe(375.00)
+        ->and(MoneyHelper::toFloat($defaultEmployeeFirstCutoff->employeeContributions[2]->amount))->toBe(50.00)
+        ->and(MoneyHelper::toFloat($monthlyEmployeeFirstCutoff->employeeContributions[0]->amount))->toBe(0.00)
+        ->and(MoneyHelper::toFloat($monthlyEmployeeFirstCutoff->employeeContributions[1]->amount))->toBe(0.00)
+        ->and(MoneyHelper::toFloat($monthlyEmployeeFirstCutoff->employeeContributions[2]->amount))->toBe(0.00)
+        ->and(MoneyHelper::toFloat($monthlyEmployeeSecondCutoff->employeeContributions[0]->amount))->toBe(1500.00)
+        ->and(MoneyHelper::toFloat($monthlyEmployeeSecondCutoff->employeeContributions[1]->amount))->toBe(750.00)
+        ->and(MoneyHelper::toFloat($monthlyEmployeeSecondCutoff->employeeContributions[2]->amount))->toBe(100.00);
+});
+
+it('scales mixed statutory schedule overrides across large semi-monthly payroll runs', function () {
+    $engine = engine();
+    $company = baseCompany([
+        'split_monthly_statutory_across_periods' => true,
+    ]);
+    $employeeCount = 1000;
+    $monthlyScheduleCount = 0;
+    $items = [];
+
+    for ($sequence = 1; $sequence <= $employeeCount; $sequence++) {
+        $employee = baseEmployee([
+            'employee_number' => sprintf('EMP-STRESS-%04d', $sequence),
+            'full_name' => sprintf('Stress Employee %04d', $sequence),
+            'email' => sprintf('stress.employee%04d@example.com', $sequence),
+            'monthly_basic_salary' => 30000,
+        ]);
+
+        if ($sequence % 10 === 0) {
+            $employee['statutory_schedule'] = 'monthly';
+            $monthlyScheduleCount++;
+        }
+
+        $items[] = ['employee' => $employee, 'input' => []];
+    }
+
+    $firstCutoff = $engine->run(
+        $company,
+        [
+            'key' => '2026-04-STRESS-A',
+            'start_date' => '2026-04-01',
+            'end_date' => '2026-04-15',
+            'release_date' => '2026-04-15',
+        ],
+        $items,
+    );
+
+    $secondCutoff = $engine->run(
+        $company,
+        [
+            'key' => '2026-04-STRESS-B',
+            'start_date' => '2026-04-16',
+            'end_date' => '2026-04-30',
+            'release_date' => '2026-04-30',
+        ],
+        $items,
+    );
+
+    $employeeContributionTotal = static fn ($run, int $index): float => MoneyHelper::toFloat(MoneyHelper::sum(array_map(
+        static fn ($result) => $result->employeeContributions[$index]->amount,
+        $run->results,
+    )));
+    $splitScheduleCount = $employeeCount - $monthlyScheduleCount;
+
+    expect($firstCutoff->results)->toHaveCount($employeeCount)
+        ->and($secondCutoff->results)->toHaveCount($employeeCount)
+        ->and($monthlyScheduleCount)->toBe(100)
+        ->and($employeeContributionTotal($firstCutoff, 0))->toBe($splitScheduleCount * 750.00)
+        ->and($employeeContributionTotal($firstCutoff, 1))->toBe($splitScheduleCount * 375.00)
+        ->and($employeeContributionTotal($firstCutoff, 2))->toBe($splitScheduleCount * 50.00)
+        ->and($employeeContributionTotal($secondCutoff, 0))->toBe(($splitScheduleCount * 750.00) + ($monthlyScheduleCount * 1500.00))
+        ->and($employeeContributionTotal($secondCutoff, 1))->toBe(($splitScheduleCount * 375.00) + ($monthlyScheduleCount * 750.00))
+        ->and($employeeContributionTotal($secondCutoff, 2))->toBe(($splitScheduleCount * 50.00) + ($monthlyScheduleCount * 100.00));
+});
+
+it('allows payroll input to explicitly mark all monthly statutory deductions as due for the current run', function () {
+    $result = engine()->compute(
+        baseCompany([
+            'split_monthly_statutory_across_periods' => true,
+        ]),
+        baseEmployee([
+            'statutory_schedule' => 'monthly',
+        ]),
+        [
+            'period' => [
+                'key' => '2026-04-STATUTORY-MONTHLY-OVERRIDE',
+                'start_date' => '2026-04-01',
+                'end_date' => '2026-04-15',
+                'release_date' => '2026-04-15',
+            ],
+            'statutory_due_this_run' => true,
+        ],
+    );
+
+    expect(MoneyHelper::toFloat($result->employeeContributions[0]->amount))->toBe(1500.00)
+        ->and(MoneyHelper::toFloat($result->employeeContributions[1]->amount))->toBe(750.00)
+        ->and(MoneyHelper::toFloat($result->employeeContributions[2]->amount))->toBe(100.00);
+});
+
+it('allows payroll input to explicitly mark a monthly sss deduction as due for the current run', function () {
+    $result = engine()->compute(
+        baseCompany([
+            'split_monthly_statutory_across_periods' => true,
+        ]),
+        baseEmployee([
+            'sss_schedule' => 'monthly',
+        ]),
+        [
+            'period' => [
+                'key' => '2026-04-SSS-MONTHLY-OVERRIDE',
+                'start_date' => '2026-04-01',
+                'end_date' => '2026-04-15',
+                'release_date' => '2026-04-15',
+            ],
+            'sss_due_this_run' => true,
+        ],
+    );
+
+    expect(MoneyHelper::toFloat($result->employeeContributions[0]->amount))->toBe(1500.00)
+        ->and(MoneyHelper::toFloat($result->employerContributions[0]->amount))->toBe(3030.00);
+});
+
+it('lets an employee split sss by cutoff even when the company default applies full statutory deductions', function () {
+    $result = engine()->compute(
+        baseCompany([
+            'split_monthly_statutory_across_periods' => false,
+        ]),
+        baseEmployee([
+            'sss_schedule' => 'split_per_cutoff',
+        ]),
+        [
+            'period' => [
+                'key' => '2026-04-SSS-EMPLOYEE-SPLIT',
+                'start_date' => '2026-04-01',
+                'end_date' => '2026-04-15',
+                'release_date' => '2026-04-15',
+            ],
+        ],
+    );
+
+    expect(MoneyHelper::toFloat($result->employeeContributions[0]->amount))->toBe(750.00)
+        ->and(MoneyHelper::toFloat($result->employerContributions[0]->amount))->toBe(1515.00);
+});
+
 it('lets an employee split pagibig by cutoff even when the company default is monthly', function () {
     $result = engine()->compute(
         baseCompany([
