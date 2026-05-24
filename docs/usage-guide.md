@@ -70,6 +70,8 @@ Useful additions include:
 - `allowances`
 - `projected_annual_taxable_income`
 - manual statutory contribution overrides
+- `statutory_schedule` when one employee needs all statutory contributions monthly or split
+- `sss_schedule`, `philhealth_schedule`, or `pagibig_schedule` when only one contribution needs different timing
 - allocation fields such as `project_code`, `cost_center`, and `vessel`
 - `edge_case_policy`
 
@@ -198,6 +200,7 @@ Behavior is affected by:
 
 - company config
 - employee-level manual overrides
+- employee-level statutory, SSS, PhilHealth, or Pag-IBIG contribution schedules
 - payroll period split rules
 
 ## Overtime, Tardiness, And Attendance Effects
@@ -339,4 +342,3 @@ Common host-application persistence patterns:
 - [Policies Guide](policies.md)
 - [Laravel Implementation Guide](laravel-implementation.md)
 - [Extending the Package](extending.md)
-

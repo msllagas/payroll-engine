@@ -146,6 +146,9 @@ This is where nested aliases such as `compensation.monthly_basic_salary` or `sta
 - `manual_philhealth_contribution`
 - `manual_pagibig_contribution`
 - `upgraded_pagibig_contribution`
+- employee `statutory_schedule`
+- employee `sss_schedule`
+- employee `philhealth_schedule`
 - employee `pagibig_schedule`
 - `tax_shield_amount_for_bonuses`
 - allocation fields like `project_code`, `cost_center`, `branch`, `department`, `vessel`
@@ -205,6 +208,9 @@ Then payroll input is normalized into:
 - `used_annual_bonus_shield`
 - `pagibig_loan_amortization`
 - `pagibig_due_this_run`
+- `sss_due_this_run`
+- `statutory_due_this_run`
+- `philhealth_due_this_run`
 - `projected_annual_taxable_income`
 - `edge_case_policy`
 
@@ -285,9 +291,9 @@ Resolution precedence is:
 2. `strategies.default.{key}`
 3. package fallback classes
 
-If the resolved workflow is still the built-in `PayrollCalculator`, the resolver composes it with the active rate, overtime, variable earning, withholding, and Pag-IBIG strategies for that client.
+If the resolved workflow is still the built-in `PayrollCalculator`, the resolver composes it with the active rate, overtime, variable earning, withholding, SSS, PhilHealth, and Pag-IBIG strategies for that client.
 
-SSS and PhilHealth remain fixed in the default workflow unless the whole workflow is replaced.
+SSS, PhilHealth, and Pag-IBIG have packaged defaults, and each calculator can be replaced independently through strategy configuration.
 
 ### Strategy Keys
 
@@ -296,6 +302,8 @@ SSS and PhilHealth remain fixed in the default workflow unless the whole workflo
 - `overtime`
 - `variable_earnings`
 - `withholding`
+- `sss`
+- `philhealth`
 - `pagibig`
 
 ### Debug Checkpoint
@@ -417,13 +425,19 @@ The statutory period divisor is:
 - `pagibig_mode`
 - `pagibig_schedule`
 - input `pagibig_due_this_run`
+- employee `statutory_schedule`
+- employee `sss_schedule`
+- input `sss_due_this_run`
+- employee `philhealth_schedule`
+- input `philhealth_due_this_run`
+- input `statutory_due_this_run`
 - input `pagibig_loan_amortization`
 - employee manual statutory contribution overrides
 - employee upgraded Pag-IBIG contribution
 
 ### Important Design Note
 
-Pag-IBIG is strategy-based and replaceable. SSS and PhilHealth are fixed inside the default workflow.
+SSS, PhilHealth, and Pag-IBIG are strategy-based and replaceable. They also support packaged schedule overrides for monthly or split-per-cutoff deductions.
 
 ### Debug Checkpoint
 

@@ -44,6 +44,8 @@ Available strategy keys:
 - `overtime`
 - `variable_earnings`
 - `withholding`
+- `sss`
+- `philhealth`
 - `pagibig`
 - `workflow`
 
@@ -69,6 +71,8 @@ The main contracts are:
 - `QuillBytes\PayrollEngine\Contracts\OvertimeCalculator`
 - `QuillBytes\PayrollEngine\Contracts\VariableEarningCalculator`
 - `QuillBytes\PayrollEngine\Contracts\WithholdingTaxCalculator`
+- `QuillBytes\PayrollEngine\Contracts\SssContributionCalculator`
+- `QuillBytes\PayrollEngine\Contracts\PhilHealthContributionCalculator`
 - `QuillBytes\PayrollEngine\Contracts\PagIbigContributionCalculator`
 
 ## Example: Custom Rate Strategy
@@ -208,4 +212,3 @@ Before publishing a customization:
 - [Policies Guide](policies.md)
 - [Architecture Overview](architecture.md)
 - [API Reference](api-reference.md)
-

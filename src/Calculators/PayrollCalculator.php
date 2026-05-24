@@ -6,7 +6,9 @@ use Money\Money;
 use QuillBytes\PayrollEngine\Contracts\OvertimeCalculator as OvertimeCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\PagIbigContributionCalculator as PagIbigContributionCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\PayrollWorkflow;
+use QuillBytes\PayrollEngine\Contracts\PhilHealthContributionCalculator as PhilHealthContributionCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\RateCalculator as RateCalculatorContract;
+use QuillBytes\PayrollEngine\Contracts\SssContributionCalculator as SssContributionCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\VariableEarningCalculator as VariableEarningCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\WithholdingTaxCalculator as WithholdingTaxCalculatorContract;
 use QuillBytes\PayrollEngine\Data\CompanyProfile;
@@ -15,7 +17,7 @@ use QuillBytes\PayrollEngine\Data\LoanDeduction;
 use QuillBytes\PayrollEngine\Data\PayrollInput;
 use QuillBytes\PayrollEngine\Data\PayrollLine;
 use QuillBytes\PayrollEngine\Data\PayrollResult;
-use QuillBytes\PayrollEngine\Enums\PayrollFrequency;
+use QuillBytes\PayrollEngine\Support\ContributionScheduleResolver;
 use QuillBytes\PayrollEngine\Support\MoneyHelper;
 use QuillBytes\PayrollEngine\Support\TraceMetadata;
 
@@ -25,8 +27,8 @@ final readonly class PayrollCalculator implements PayrollWorkflow
         private RateCalculatorContract $rateCalculator,
         private OvertimeCalculatorContract $overtimeCalculator,
         private VariableEarningCalculatorContract $variableEarningCalculator,
-        private SssContributionCalculator $sssCalculator,
-        private PhilHealthContributionCalculator $philHealthCalculator,
+        private SssContributionCalculatorContract $sssCalculator,
+        private PhilHealthContributionCalculatorContract $philHealthCalculator,
         private PagIbigContributionCalculatorContract $pagIbigCalculator,
         private WithholdingTaxCalculatorContract $withholdingTaxCalculator,
     ) {}
@@ -122,12 +124,13 @@ final readonly class PayrollCalculator implements PayrollWorkflow
 
         if ($runType->usesMandatoryContributions()) {
             $periodDivisor = $this->statutoryPeriodDivisor($company);
-            $sss = $this->sssCalculator->calculate($employee->compensation->monthlyBasicSalary, $employee->statutory->manualSssContribution, $periodDivisor);
-            $philHealth = $this->philHealthCalculator->calculate($employee->compensation->monthlyBasicSalary, $employee->statutory->manualPhilHealthContribution, $periodDivisor);
+
+            $sss = $this->sssCalculator->calculate($company, $employee, $input, $periodDivisor);
+            $philHealth = $this->philHealthCalculator->calculate($company, $employee, $input, $periodDivisor);
             $pagIbig = $this->pagIbigCalculator->calculate($company, $employee, $input, $periodDivisor);
 
-            $employeeContributions = [$sss['employee'], $philHealth['employee'], $pagIbig->employee];
-            $employerContributions = [$sss['employer'], $philHealth['employer'], $pagIbig->employer];
+            $employeeContributions = [$sss->employee, $philHealth->employee, $pagIbig->employee];
+            $employerContributions = [$sss->employer, $philHealth->employer, $pagIbig->employer];
         }
 
         $deductions = array_map(
@@ -277,10 +280,6 @@ final readonly class PayrollCalculator implements PayrollWorkflow
             return 1;
         }
 
-        return match ($company->schedule->frequency) {
-            PayrollFrequency::Monthly => 1,
-            PayrollFrequency::SemiMonthly => 2,
-            PayrollFrequency::Weekly => 4,
-        };
+        return ContributionScheduleResolver::cutoffDivisor($company);
     }
 }

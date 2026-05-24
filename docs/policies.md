@@ -14,8 +14,8 @@ Use the policy surface that matches the kind of change you need:
 | --- | --- | --- |
 | `defaults` | Package-wide baseline values | frequency, hours per day, tax strategy, overtime premiums |
 | `presets.{client_code}` | Client or tenant defaults | company-specific statutory handling, release lead time, manual OT mode |
-| `strategies.default` | Application-wide formula replacement | custom overtime, withholding, Pag-IBIG, workflow |
-| `strategies.clients.{client_code}` | Client-specific formula replacement | one tenant uses a different workflow or tax calculator |
+| `strategies.default` | Application-wide formula replacement | custom overtime, withholding, statutory calculators, workflow |
+| `strategies.clients.{client_code}` | Client-specific formula replacement | one tenant uses a different workflow, tax calculator, or statutory calculator |
 | `edge_case_policies` | Replace the edge-case policy pipeline | add or swap prepare/finalize policy objects |
 | `edge_case_policy` metadata | Runtime policy decisions for a company, employee, or payroll input | missing attendance mode, deduction overlap handling, partial payout limit |
 
@@ -47,6 +47,8 @@ The available strategy keys are:
 - `overtime`
 - `variable_earnings`
 - `withholding`
+- `sss`
+- `philhealth`
 - `pagibig`
 
 When you provide a class string in Laravel, the package resolves it through the container. That means your custom strategy can use constructor injection for repositories, services, or other application dependencies.
@@ -221,6 +223,8 @@ The main extension contracts are:
 - `QuillBytes\PayrollEngine\Contracts\OvertimeCalculator`
 - `QuillBytes\PayrollEngine\Contracts\VariableEarningCalculator`
 - `QuillBytes\PayrollEngine\Contracts\WithholdingTaxCalculator`
+- `QuillBytes\PayrollEngine\Contracts\SssContributionCalculator`
+- `QuillBytes\PayrollEngine\Contracts\PhilHealthContributionCalculator`
 - `QuillBytes\PayrollEngine\Contracts\PagIbigContributionCalculator`
 
 Use `PayrollWorkflow` only when you need to take over the whole payroll calculation flow.

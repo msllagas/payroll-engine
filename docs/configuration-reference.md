@@ -105,6 +105,8 @@ These are the package defaults used when no client-specific override is register
 | `overtime` | `OvertimeCalculator` | `OvertimeCalculator` | Overtime earning computation |
 | `variable_earnings` | `VariableEarningCalculator` | `VariableEarningCalculator` | Variable earnings lines |
 | `withholding` | `WithholdingTaxCalculator` | `WithholdingTaxCalculator` | Regular withholding and bonus tax |
+| `sss` | `SssContributionCalculator` | `SssContributionCalculator` | SSS contribution logic |
+| `philhealth` | `PhilHealthContributionCalculator` | `PhilHealthContributionCalculator` | PhilHealth contribution logic |
 | `pagibig` | `PagIbigContributionCalculator` | `PagIbigContributionCalculator` | Pag-IBIG contribution logic |
 
 ### `strategies.clients.{client_code}`

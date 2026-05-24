@@ -4,6 +4,7 @@ namespace QuillBytes\PayrollEngine\Data;
 
 use Money\Money;
 use QuillBytes\PayrollEngine\Enums\PagIbigContributionSchedule;
+use QuillBytes\PayrollEngine\Enums\StatutoryContributionSchedule;
 
 final readonly class StatutoryProfile
 {
@@ -22,5 +23,8 @@ final readonly class StatutoryProfile
         public ?Money $upgradedPagIbigContribution = null,
         public ?PagIbigContributionSchedule $pagIbigContributionSchedule = null,
         public array $metadata = [],
+        public ?StatutoryContributionSchedule $statutoryContributionSchedule = null,
+        public ?StatutoryContributionSchedule $sssContributionSchedule = null,
+        public ?StatutoryContributionSchedule $philHealthContributionSchedule = null,
     ) {}
 }
