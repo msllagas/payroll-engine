@@ -237,6 +237,26 @@ Use when:
 
 - a tenant needs a different annualization model or tax table
 
+### `SssContributionCalculator`
+
+Responsibility:
+
+- SSS contribution handling
+
+Use when:
+
+- SSS rules differ from the package default
+
+### `PhilHealthContributionCalculator`
+
+Responsibility:
+
+- PhilHealth contribution handling
+
+Use when:
+
+- PhilHealth rules differ from the package default
+
 ### `PagIbigContributionCalculator`
 
 Responsibility:
@@ -281,4 +301,3 @@ Responsibility:
 - [Architecture Overview](architecture.md)
 - [Extending the Package](extending.md)
 - [Policies Guide](policies.md)
-

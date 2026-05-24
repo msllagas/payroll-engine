@@ -3,7 +3,9 @@
 use QuillBytes\PayrollEngine\Calculators\OvertimeCalculator;
 use QuillBytes\PayrollEngine\Calculators\PagIbigContributionCalculator;
 use QuillBytes\PayrollEngine\Calculators\PayrollCalculator;
+use QuillBytes\PayrollEngine\Calculators\PhilHealthContributionCalculator;
 use QuillBytes\PayrollEngine\Calculators\RateCalculator;
+use QuillBytes\PayrollEngine\Calculators\SssContributionCalculator;
 use QuillBytes\PayrollEngine\Calculators\VariableEarningCalculator;
 use QuillBytes\PayrollEngine\Calculators\WithholdingTaxCalculator;
 
@@ -180,6 +182,12 @@ return [
     | clients.<client_code>.withholding:
     |   Override only the withholding and bonus tax logic.
     |
+    | clients.<client_code>.sss:
+    |   Override only the SSS contribution logic.
+    |
+    | clients.<client_code>.philhealth:
+    |   Override only the PhilHealth contribution logic.
+    |
     | clients.<client_code>.pagibig:
     |   Override only the Pag-IBIG contribution and related deduction logic.
     |
@@ -198,6 +206,8 @@ return [
             'overtime' => OvertimeCalculator::class,
             'variable_earnings' => VariableEarningCalculator::class,
             'withholding' => WithholdingTaxCalculator::class,
+            'sss' => SssContributionCalculator::class,
+            'philhealth' => PhilHealthContributionCalculator::class,
             'pagibig' => PagIbigContributionCalculator::class,
         ],
         'clients' => [
@@ -207,6 +217,8 @@ return [
                 'overtime' => \App\Payroll\Strategies\ClientOvertimeCalculator::class,
                 'variable_earnings' => \App\Payroll\Strategies\ClientVariableEarningCalculator::class,
                 'withholding' => \App\Payroll\Strategies\ClientWithholdingTaxCalculator::class,
+                'sss' => \App\Payroll\Strategies\ClientSssCalculator::class,
+                'philhealth' => \App\Payroll\Strategies\ClientPhilHealthCalculator::class,
                 'pagibig' => \App\Payroll\Strategies\ClientPagIbigCalculator::class,
                 'workflow' => \App\Payroll\Strategies\ClientPayrollWorkflow::class,
             ],

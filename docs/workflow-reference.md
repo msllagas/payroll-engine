@@ -116,6 +116,9 @@ Employee-level fields that commonly change behavior:
 - `manual_philhealth_contribution`
 - `manual_pagibig_contribution`
 - `upgraded_pagibig_contribution`
+- employee `statutory_schedule`
+- employee `sss_schedule`
+- employee `philhealth_schedule`
 - `tax_shield_amount_for_bonuses`
 - employee `pagibig_schedule`
 

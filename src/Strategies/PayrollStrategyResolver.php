@@ -13,7 +13,9 @@ use QuillBytes\PayrollEngine\Calculators\WithholdingTaxCalculator;
 use QuillBytes\PayrollEngine\Contracts\OvertimeCalculator as OvertimeCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\PagIbigContributionCalculator as PagIbigContributionCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\PayrollWorkflow;
+use QuillBytes\PayrollEngine\Contracts\PhilHealthContributionCalculator as PhilHealthContributionCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\RateCalculator as RateCalculatorContract;
+use QuillBytes\PayrollEngine\Contracts\SssContributionCalculator as SssContributionCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\VariableEarningCalculator as VariableEarningCalculatorContract;
 use QuillBytes\PayrollEngine\Contracts\WithholdingTaxCalculator as WithholdingTaxCalculatorContract;
 use QuillBytes\PayrollEngine\Exceptions\InvalidPayrollData;
@@ -56,6 +58,16 @@ final class PayrollStrategyResolver
     private array $pagIbigCache = [];
 
     /**
+     * @var array<string, SssContributionCalculatorContract>
+     */
+    private array $sssCache = [];
+
+    /**
+     * @var array<string, PhilHealthContributionCalculatorContract>
+     */
+    private array $philHealthCache = [];
+
+    /**
      * @param  array<string, mixed>  $config
      * @param  (callable(class-string):object)|null  $factory
      */
@@ -86,8 +98,8 @@ final class PayrollStrategyResolver
             $this->rateCalculatorFor($clientCode),
             $this->overtimeCalculatorFor($clientCode),
             $this->variableEarningCalculatorFor($clientCode),
-            new SssContributionCalculator,
-            new PhilHealthContributionCalculator,
+            $this->sssContributionCalculatorFor($clientCode),
+            $this->philHealthContributionCalculatorFor($clientCode),
             $this->pagIbigContributionCalculatorFor($clientCode),
             $this->withholdingTaxCalculatorFor($clientCode),
         );
@@ -103,6 +115,8 @@ final class PayrollStrategyResolver
         $overtime = $this->overtimeCalculatorFor($clientCode);
         $variableEarnings = $this->variableEarningCalculatorFor($clientCode);
         $withholding = $this->withholdingTaxCalculatorFor($clientCode);
+        $sss = $this->sssContributionCalculatorFor($clientCode);
+        $philHealth = $this->philHealthContributionCalculatorFor($clientCode);
         $pagIbig = $this->pagIbigContributionCalculatorFor($clientCode);
 
         return [
@@ -111,6 +125,8 @@ final class PayrollStrategyResolver
             'overtime' => $overtime::class,
             'variable_earnings' => $variableEarnings::class,
             'withholding' => $withholding::class,
+            'sss' => $sss::class,
+            'philhealth' => $philHealth::class,
             'pagibig' => $pagIbig::class,
         ];
     }
@@ -190,6 +206,36 @@ final class PayrollStrategyResolver
         );
     }
 
+    private function sssContributionCalculatorFor(string $clientCode): SssContributionCalculatorContract
+    {
+        $clientCode = $this->normalizeClientCode($clientCode);
+
+        if (isset($this->sssCache[$clientCode])) {
+            return $this->sssCache[$clientCode];
+        }
+
+        return $this->sssCache[$clientCode] = $this->resolve(
+            $this->definitionFor($clientCode, 'sss') ?? SssContributionCalculator::class,
+            SssContributionCalculatorContract::class,
+            'sss'
+        );
+    }
+
+    private function philHealthContributionCalculatorFor(string $clientCode): PhilHealthContributionCalculatorContract
+    {
+        $clientCode = $this->normalizeClientCode($clientCode);
+
+        if (isset($this->philHealthCache[$clientCode])) {
+            return $this->philHealthCache[$clientCode];
+        }
+
+        return $this->philHealthCache[$clientCode] = $this->resolve(
+            $this->definitionFor($clientCode, 'philhealth') ?? PhilHealthContributionCalculator::class,
+            PhilHealthContributionCalculatorContract::class,
+            'philhealth'
+        );
+    }
+
     private function isDefaultWorkflowDefinition(mixed $definition): bool
     {
         return $definition instanceof PayrollCalculator || $definition === PayrollCalculator::class;
@@ -223,6 +269,8 @@ final class PayrollStrategyResolver
             'overtime' => OvertimeCalculator::class,
             'variable_earnings' => VariableEarningCalculator::class,
             'withholding' => WithholdingTaxCalculator::class,
+            'sss' => SssContributionCalculator::class,
+            'philhealth' => PhilHealthContributionCalculator::class,
             'pagibig' => PagIbigContributionCalculator::class,
         ];
     }

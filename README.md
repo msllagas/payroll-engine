@@ -220,7 +220,11 @@ Useful optional employee fields:
 - `phic_number`
 - `minimum_wage_earner`
 - manual statutory contribution overrides
+- `statutory_schedule` for employee-specific monthly or split timing across SSS, PhilHealth, and Pag-IBIG
+- `sss_schedule` for employee-specific monthly or split SSS deductions
+- `philhealth_schedule` for employee-specific monthly or split PhilHealth deductions
 - upgraded or voluntary Pag-IBIG contribution
+- `pagibig_schedule` for employee-specific monthly or split Pag-IBIG deductions
 - `project_code`
 - `project_name`
 - `cost_center`
@@ -256,6 +260,9 @@ Useful optional payroll input fields:
 - `used_annual_bonus_shield`
 - `pagibig_loan_amortization`
 - `pagibig_due_this_run`
+- `statutory_due_this_run`
+- `sss_due_this_run`
+- `philhealth_due_this_run`
 - `projected_annual_taxable_income`
 
 ### Important Input Notes
