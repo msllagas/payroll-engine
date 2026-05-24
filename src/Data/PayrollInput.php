@@ -45,6 +45,9 @@ final readonly class PayrollInput
         public ?bool $pagIbigDueThisRun = null,
         public ?Money $projectedAnnualTaxableIncome = null,
         public array $metadata = [],
+        public ?bool $statutoryDueThisRun = null,
+        public ?bool $sssDueThisRun = null,
+        public ?bool $philHealthDueThisRun = null,
     ) {
         $this->leaveDeduction = $leaveDeduction ?? MoneyHelper::zero();
         $this->absenceDeduction = $absenceDeduction ?? MoneyHelper::zero();
@@ -77,6 +80,9 @@ final readonly class PayrollInput
             pagIbigDueThisRun: $overrides['pagIbigDueThisRun'] ?? $this->pagIbigDueThisRun,
             projectedAnnualTaxableIncome: $overrides['projectedAnnualTaxableIncome'] ?? $this->projectedAnnualTaxableIncome,
             metadata: $overrides['metadata'] ?? $this->metadata,
+            statutoryDueThisRun: $overrides['statutoryDueThisRun'] ?? $this->statutoryDueThisRun,
+            sssDueThisRun: $overrides['sssDueThisRun'] ?? $this->sssDueThisRun,
+            philHealthDueThisRun: $overrides['philHealthDueThisRun'] ?? $this->philHealthDueThisRun,
         );
     }
 }

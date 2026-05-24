@@ -11,6 +11,7 @@ use QuillBytes\PayrollEngine\Data\EmploymentProfile;
 use QuillBytes\PayrollEngine\Data\PayrollDetails;
 use QuillBytes\PayrollEngine\Data\StatutoryProfile;
 use QuillBytes\PayrollEngine\Enums\PagIbigContributionSchedule;
+use QuillBytes\PayrollEngine\Enums\StatutoryContributionSchedule;
 use QuillBytes\PayrollEngine\Support\AttributeReader;
 use QuillBytes\PayrollEngine\Support\MoneyHelper;
 
@@ -52,6 +53,8 @@ final class EmployeeProfileNormalizer
             otherAllowances: $this->otherAllowances($employee),
         );
 
+        $statutoryContributionSchedule = $this->statutoryContributionSchedule($employee);
+
         $statutory = new StatutoryProfile(
             tin: $this->reader->get($employee, ['tin', 'statutory.tin']),
             sssNumber: $this->reader->get($employee, ['sss_number', 'sssNumber', 'statutory.sss_number', 'statutory.sssNumber']),
@@ -62,8 +65,11 @@ final class EmployeeProfileNormalizer
             manualPhilHealthContribution: $this->nullableMoney($this->reader->get($employee, ['manual_philhealth_contribution', 'manualPhilHealthContribution', 'statutory.manual_philhealth_contribution', 'statutory.manualPhilHealthContribution'])),
             manualPagIbigContribution: $this->nullableMoney($this->reader->get($employee, ['manual_pagibig_contribution', 'manualPagIbigContribution', 'statutory.manual_pagibig_contribution', 'statutory.manualPagIbigContribution'])),
             upgradedPagIbigContribution: $this->nullableMoney($this->reader->get($employee, ['upgraded_pagibig_contribution', 'upgradedPagIbigContribution', 'voluntary_pagibig_contribution', 'voluntaryPagIbigContribution', 'statutory.upgraded_pagibig_contribution', 'statutory.upgradedPagIbigContribution', 'statutory.voluntary_pagibig_contribution', 'statutory.voluntaryPagIbigContribution'])),
-            pagIbigContributionSchedule: $this->pagIbigContributionSchedule($employee),
+            pagIbigContributionSchedule: $this->pagIbigContributionSchedule($employee, $statutoryContributionSchedule),
             metadata: [],
+            statutoryContributionSchedule: $statutoryContributionSchedule,
+            sssContributionSchedule: $this->sssContributionSchedule($employee, $statutoryContributionSchedule),
+            philHealthContributionSchedule: $this->philHealthContributionSchedule($employee, $statutoryContributionSchedule),
         );
 
         $payrollDetails = new PayrollDetails(
@@ -176,7 +182,7 @@ final class EmployeeProfileNormalizer
         return MoneyHelper::fromNumeric($value);
     }
 
-    private function pagIbigContributionSchedule(mixed $employee): ?PagIbigContributionSchedule
+    private function pagIbigContributionSchedule(mixed $employee, ?StatutoryContributionSchedule $fallback = null): ?PagIbigContributionSchedule
     {
         $value = $this->reader->get($employee, [
             'pagibig_schedule',
@@ -194,10 +200,92 @@ final class EmployeeProfileNormalizer
         ]);
 
         if (! is_string($value) || trim($value) === '') {
-            return null;
+            return $fallback !== null
+                ? PagIbigContributionSchedule::from($fallback->value)
+                : null;
         }
 
         return PagIbigContributionSchedule::from($value);
+    }
+
+    private function statutoryContributionSchedule(mixed $employee): ?StatutoryContributionSchedule
+    {
+        $value = $this->reader->get($employee, [
+            'statutory_schedule',
+            'statutorySchedule',
+            'statutory_contribution_schedule',
+            'statutoryContributionSchedule',
+            'contribution_schedule',
+            'contributionSchedule',
+            'statutory.statutory_schedule',
+            'statutory.statutorySchedule',
+            'statutory.statutory_contribution_schedule',
+            'statutory.statutoryContributionSchedule',
+            'statutory.contribution_schedule',
+            'statutory.contributionSchedule',
+        ]);
+
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        return StatutoryContributionSchedule::from($value);
+    }
+
+    private function sssContributionSchedule(mixed $employee, ?StatutoryContributionSchedule $fallback = null): ?StatutoryContributionSchedule
+    {
+        $value = $this->reader->get($employee, [
+            'sss_schedule',
+            'sssSchedule',
+            'sss_contribution_schedule',
+            'sssContributionSchedule',
+            'sss_payment_schedule',
+            'sssPaymentSchedule',
+            'statutory.sss_schedule',
+            'statutory.sssSchedule',
+            'statutory.sss_contribution_schedule',
+            'statutory.sssContributionSchedule',
+            'statutory.sss_payment_schedule',
+            'statutory.sssPaymentSchedule',
+        ]);
+
+        if (! is_string($value) || trim($value) === '') {
+            return $fallback;
+        }
+
+        return StatutoryContributionSchedule::from($value);
+    }
+
+    private function philHealthContributionSchedule(mixed $employee, ?StatutoryContributionSchedule $fallback = null): ?StatutoryContributionSchedule
+    {
+        $value = $this->reader->get($employee, [
+            'philhealth_schedule',
+            'philHealthSchedule',
+            'philhealth_contribution_schedule',
+            'philHealthContributionSchedule',
+            'philhealth_payment_schedule',
+            'philHealthPaymentSchedule',
+            'phic_schedule',
+            'phicSchedule',
+            'phic_contribution_schedule',
+            'phicContributionSchedule',
+            'statutory.philhealth_schedule',
+            'statutory.philHealthSchedule',
+            'statutory.philhealth_contribution_schedule',
+            'statutory.philHealthContributionSchedule',
+            'statutory.philhealth_payment_schedule',
+            'statutory.philHealthPaymentSchedule',
+            'statutory.phic_schedule',
+            'statutory.phicSchedule',
+            'statutory.phic_contribution_schedule',
+            'statutory.phicContributionSchedule',
+        ]);
+
+        if (! is_string($value) || trim($value) === '') {
+            return $fallback;
+        }
+
+        return StatutoryContributionSchedule::from($value);
     }
 
     /**

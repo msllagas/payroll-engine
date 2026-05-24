@@ -58,6 +58,9 @@ final class PayrollInputNormalizer
             pagIbigDueThisRun: $this->nullableBool($this->reader->get($input, ['pagibig_due_this_run', 'pagIbigDueThisRun'])),
             projectedAnnualTaxableIncome: $this->nullableMoney($this->reader->get($input, ['projected_annual_taxable_income', 'projectedAnnualTaxableIncome'])),
             metadata: is_array($input) ? $input : [],
+            statutoryDueThisRun: $this->nullableBool($this->reader->get($input, ['statutory_due_this_run', 'statutoryDueThisRun', 'contributions_due_this_run', 'contributionsDueThisRun'])),
+            sssDueThisRun: $this->nullableBool($this->reader->get($input, ['sss_due_this_run', 'sssDueThisRun'])),
+            philHealthDueThisRun: $this->nullableBool($this->reader->get($input, ['philhealth_due_this_run', 'philHealthDueThisRun', 'phic_due_this_run', 'phicDueThisRun'])),
         );
     }
 
