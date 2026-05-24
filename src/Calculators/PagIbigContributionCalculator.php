@@ -11,7 +11,7 @@ use QuillBytes\PayrollEngine\Data\PayrollInput;
 use QuillBytes\PayrollEngine\Data\PayrollLine;
 use QuillBytes\PayrollEngine\Enums\PagIbigContributionMode;
 use QuillBytes\PayrollEngine\Enums\PagIbigContributionSchedule;
-use QuillBytes\PayrollEngine\Enums\PayrollFrequency;
+use QuillBytes\PayrollEngine\Support\ContributionScheduleResolver;
 use QuillBytes\PayrollEngine\Support\MoneyHelper;
 use QuillBytes\PayrollEngine\Support\TraceMetadata;
 
@@ -95,16 +95,9 @@ final class PagIbigContributionCalculator implements PagIbigContributionCalculat
         };
         $employerContribution = $mandatory['employer'];
 
-        if ($schedule === PagIbigContributionSchedule::Monthly) {
-            if (! $this->shouldApplyMonthlyContribution($company, $input)) {
-                $employeeContribution = MoneyHelper::zero($employeeContribution);
-                $employerContribution = MoneyHelper::zero($employerContribution);
-            }
-        } else {
-            $effectiveDivisor = max(1, $periodDivisor, $this->cutoffDivisor($company));
-            $employeeContribution = MoneyHelper::divide($employeeContribution, $effectiveDivisor);
-            $employerContribution = MoneyHelper::divide($employerContribution, $effectiveDivisor);
-        }
+        $dueThisRun = $input->pagIbigDueThisRun ?? $input->statutoryDueThisRun;
+        $employeeContribution = ContributionScheduleResolver::apply($employeeContribution, $company, $input, $schedule->value, $periodDivisor, $dueThisRun);
+        $employerContribution = ContributionScheduleResolver::apply($employerContribution, $company, $input, $schedule->value, $periodDivisor, $dueThisRun);
 
         return new PagIbigContributionResult(
             employee: new PayrollLine(
@@ -192,39 +185,15 @@ final class PagIbigContributionCalculator implements PagIbigContributionCalculat
      */
     private function effectiveSchedule(CompanyProfile $company, EmployeeProfile $employee): PagIbigContributionSchedule
     {
-        return $employee->statutory->pagIbigContributionSchedule
-            ?? $company->pagIbigContributionSchedule;
-    }
-
-    /**
-     * Determines whether a monthly Pag-IBIG deduction should apply on the current run.
-     *
-     * When payroll dates are not enough to infer the due run confidently, the host
-     * application may pass `pagibig_due_this_run` through payroll input.
-     */
-    private function shouldApplyMonthlyContribution(CompanyProfile $company, PayrollInput $input): bool
-    {
-        if ($input->pagIbigDueThisRun !== null) {
-            return $input->pagIbigDueThisRun;
+        if ($employee->statutory->pagIbigContributionSchedule !== null) {
+            return $employee->statutory->pagIbigContributionSchedule;
         }
 
-        return match ($company->schedule->frequency) {
-            PayrollFrequency::Monthly => true,
-            PayrollFrequency::SemiMonthly => $input->period->startDate->day > 15 || $input->period->endDate->isSameDay($input->period->endDate->endOfMonth()),
-            PayrollFrequency::Weekly => $input->period->releaseDate->addWeek()->month !== $input->period->releaseDate->month,
-        };
-    }
+        if ($employee->statutory->statutoryContributionSchedule !== null) {
+            return PagIbigContributionSchedule::from($employee->statutory->statutoryContributionSchedule->value);
+        }
 
-    /**
-     * Returns the packaged cutoff divisor for payroll frequencies that split monthly savings.
-     */
-    private function cutoffDivisor(CompanyProfile $company): int
-    {
-        return match ($company->schedule->frequency) {
-            PayrollFrequency::Monthly => 1,
-            PayrollFrequency::SemiMonthly => 2,
-            PayrollFrequency::Weekly => 4,
-        };
+        return $company->pagIbigContributionSchedule;
     }
 
     /**

@@ -277,10 +277,6 @@ final readonly class PayrollCalculator implements PayrollWorkflow
             return 1;
         }
 
-        return match ($company->schedule->frequency) {
-            PayrollFrequency::Monthly => 1,
-            PayrollFrequency::SemiMonthly => 2,
-            PayrollFrequency::Weekly => 4,
-        };
+        return ContributionScheduleResolver::cutoffDivisor($company);
     }
 }
