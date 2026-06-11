@@ -998,6 +998,145 @@ it('computes hourly payroll with regular hours overtime night differential and u
         ->and(MoneyHelper::toFloat($result->netPay))->toBe(8805.00);
 });
 
+it('computes holiday overtime using exact holiday type policies', function (
+    string $type,
+    string $expectedLabel,
+    float $expectedMultiplier,
+    float $expectedAmount,
+) {
+    $result = engine()->compute(
+        baseCompany([
+            'regular_holiday_ot_premium' => 2.60,
+            'special_non_working_day_ot_premium' => 1.70,
+            'special_working_holiday_ot_premium' => 1.30,
+        ]),
+        baseEmployee([
+            'employee_number' => 'EMP-HOLIDAY-OT',
+            'full_name' => 'Holiday Overtime Employee',
+            'hourly_rate' => 100,
+        ]),
+        [
+            'period' => [
+                'key' => '2026-06-HOLIDAY-OT',
+                'start_date' => '2026-06-01',
+                'end_date' => '2026-06-15',
+                'release_date' => '2026-06-15',
+            ],
+            'overtime' => [
+                [
+                    'type' => $type,
+                    'hours' => 2,
+                ],
+            ],
+        ],
+    );
+
+    $overtimeLines = array_values(array_filter(
+        $result->earnings,
+        static fn ($line) => ($line->metadata['source'] ?? null) === 'overtime_calculator',
+    ));
+
+    expect($overtimeLines)->toHaveCount(1)
+        ->and($overtimeLines[0]->label)->toBe($expectedLabel)
+        ->and(MoneyHelper::toFloat($overtimeLines[0]->amount))->toBe($expectedAmount)
+        ->and($overtimeLines[0]->metadata['applied_rule'])->toBe($type)
+        ->and($overtimeLines[0]->metadata['basis']['multiplier'])->toBe($expectedMultiplier);
+})->with([
+    'special non-working day exact type' => [
+        'special_non_working_day',
+        'Special Non-Working Day Overtime',
+        1.70,
+        340.00,
+    ],
+    'special working holiday exact type' => [
+        'special_working_holiday',
+        'Special Working Holiday Overtime',
+        1.30,
+        260.00,
+    ],
+    'regular holiday type' => [
+        'regular_holiday',
+        'Regular Holiday Overtime',
+        2.60,
+        520.00,
+    ],
+]);
+
+it('keeps exact holiday premiums independent from ordinary overtime defaults', function () {
+    $result = engine()->compute(
+        baseCompany([
+            'work_day_ot_premium' => 1.50,
+            'rest_day_ot_premium' => 1.80,
+        ]),
+        baseEmployee([
+            'employee_number' => 'EMP-HOLIDAY-FALLBACK',
+            'full_name' => 'Holiday Fallback Employee',
+            'hourly_rate' => 100,
+        ]),
+        [
+            'period' => [
+                'key' => '2026-06-HOLIDAY-FALLBACK',
+                'start_date' => '2026-06-01',
+                'end_date' => '2026-06-15',
+                'release_date' => '2026-06-15',
+            ],
+            'overtime' => [
+                [
+                    'type' => 'special_non_working_day',
+                    'hours' => 1,
+                ],
+                [
+                    'type' => 'special_working_holiday',
+                    'hours' => 1,
+                ],
+            ],
+        ],
+    );
+
+    $overtimeLines = array_values(array_filter(
+        $result->earnings,
+        static fn ($line) => ($line->metadata['source'] ?? null) === 'overtime_calculator',
+    ));
+
+    expect($overtimeLines)->toHaveCount(2)
+        ->and($overtimeLines[0]->label)->toBe('Special Non-Working Day Overtime')
+        ->and(MoneyHelper::toFloat($overtimeLines[0]->amount))->toBe(169.00)
+        ->and($overtimeLines[0]->metadata['basis']['multiplier'])->toBe(1.69)
+        ->and($overtimeLines[1]->label)->toBe('Special Working Holiday Overtime')
+        ->and(MoneyHelper::toFloat($overtimeLines[1]->amount))->toBe(125.00)
+        ->and($overtimeLines[1]->metadata['basis']['multiplier'])->toBe(1.25);
+});
+
+it('rejects unsupported generic or legacy holiday overtime types', function (string $type) {
+    expect(fn () => engine()->compute(
+        baseCompany(),
+        baseEmployee([
+            'employee_number' => 'EMP-HOLIDAY-INVALID',
+            'full_name' => 'Invalid Holiday Employee',
+            'hourly_rate' => 100,
+        ]),
+        [
+            'period' => [
+                'key' => '2026-06-HOLIDAY-INVALID',
+                'start_date' => '2026-06-01',
+                'end_date' => '2026-06-15',
+                'release_date' => '2026-06-15',
+            ],
+            'overtime' => [
+                [
+                    'type' => $type,
+                    'hours' => 1,
+                ],
+            ],
+        ],
+    ))->toThrow(InvalidPayrollData::class, 'Unsupported overtime type');
+})->with([
+    'generic holiday alias' => ['holiday'],
+    'legacy special holiday alias' => ['special_holiday'],
+    'rest day holiday combined type' => ['rest_day_holiday'],
+    'rest day regular holiday combined type' => ['rest_day_regular_holiday'],
+]);
+
 it('computes core earning components in one payroll scenario', function () {
     $result = engine()->compute(
         baseCompany(),

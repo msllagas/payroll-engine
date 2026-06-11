@@ -59,8 +59,9 @@ These are the package-wide baseline policy values.
 | --- | --- | --- | --- | --- |
 | `work_day_ot_premium` | `float` | `1.25` | Overtime multiplier for regular work days | Change when client OT premium differs |
 | `rest_day_ot_premium` | `float` | `1.69` | Overtime multiplier for rest days | Change for client-specific rest day OT rules |
-| `holiday_ot_premium` | `float` | `2.60` | Overtime multiplier for holidays | Change for holiday-specific policies |
-| `rest_day_holiday_ot_premium` | `float` | `3.38` | Overtime multiplier for rest-day holidays | Change for company-specific combined-premium logic |
+| `regular_holiday_ot_premium` | `float` | `2.60` | Overtime multiplier for regular holidays | Change when regular holiday OT differs |
+| `special_non_working_day_ot_premium` | `float` | `1.69` | Overtime multiplier for special non-working days | Change when special non-working day OT differs |
+| `special_working_holiday_ot_premium` | `float` | `1.25` | Overtime multiplier for special working holidays | Change when special working holiday OT differs |
 | `night_shift_differential_premium` | `float` | `0.10` | Night differential premium | Change when the company uses a different NSD premium |
 
 ## `presets`

@@ -143,8 +143,9 @@ These keys define the default statutory and tax handling that gets applied unles
 
 - `work_day_ot_premium`
 - `rest_day_ot_premium`
-- `holiday_ot_premium`
-- `rest_day_holiday_ot_premium`
+- `regular_holiday_ot_premium`
+- `special_non_working_day_ot_premium`
+- `special_working_holiday_ot_premium`
 - `night_shift_differential_premium`
 
 Premium values are stored as decimal multipliers.

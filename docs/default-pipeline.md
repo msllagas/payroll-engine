@@ -89,8 +89,9 @@ This means a company payload always wins over config.
 - `annual_bonus_tax_shield`
 - `work_day_ot_premium`
 - `rest_day_ot_premium`
-- `holiday_ot_premium`
-- `rest_day_holiday_ot_premium`
+- `regular_holiday_ot_premium`
+- `special_non_working_day_ot_premium`
+- `special_working_holiday_ot_premium`
 - `night_shift_differential_premium`
 
 ### Sample

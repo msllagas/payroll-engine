@@ -3,6 +3,7 @@
 namespace QuillBytes\PayrollEngine\Validators;
 
 use QuillBytes\PayrollEngine\Data\PayrollInput;
+use QuillBytes\PayrollEngine\Enums\OvertimeType;
 use QuillBytes\PayrollEngine\Exceptions\InvalidPayrollData;
 
 final class PayrollInputValidator
@@ -20,6 +21,16 @@ final class PayrollInputValidator
 
             if ($entry->manualAmount !== null && $entry->manualAmount->isNegative()) {
                 throw new InvalidPayrollData('Manual overtime amount cannot be negative.');
+            }
+
+            if (OvertimeType::normalize($entry->type) === null) {
+                throw new InvalidPayrollData(
+                    sprintf(
+                        'Unsupported overtime type "%s". Supported overtime types: %s.',
+                        $entry->type,
+                        implode(', ', OvertimeType::values()),
+                    )
+                );
             }
         }
 

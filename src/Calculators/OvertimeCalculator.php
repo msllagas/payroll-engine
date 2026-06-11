@@ -9,6 +9,8 @@ use QuillBytes\PayrollEngine\Data\OvertimeEntry;
 use QuillBytes\PayrollEngine\Data\PayrollInput;
 use QuillBytes\PayrollEngine\Data\PayrollLine;
 use QuillBytes\PayrollEngine\Data\RateSnapshot;
+use QuillBytes\PayrollEngine\Enums\OvertimeType;
+use QuillBytes\PayrollEngine\Exceptions\InvalidPayrollData;
 use QuillBytes\PayrollEngine\Support\MoneyHelper;
 use QuillBytes\PayrollEngine\Support\TraceMetadata;
 
@@ -33,10 +35,9 @@ use QuillBytes\PayrollEngine\Support\TraceMetadata;
  * Supported default overtime types:
  * - `regular`
  * - `rest_day`
- * - `special_holiday`
  * - `regular_holiday`
- * - `rest_day_regular_holiday`
- * - `rest_day_holiday`
+ * - `special_non_working_day`
+ * - `special_working_holiday`
  * - `night_differential`
  *
  * Use case:
@@ -97,7 +98,9 @@ final class OvertimeCalculator implements OvertimeCalculatorContract
         $lines = [];
 
         foreach ($input->overtimeEntries as $entry) {
-            $amount = $entry->manualAmount ?? $this->computeAmount($company, $entry, $rates->hourlyRate);
+            $type = $this->typeFor($entry);
+            $multiplier = $this->resolvedMultiplier($company, $entry, $type);
+            $amount = $entry->manualAmount ?? $this->computeAmount($company, $entry, $rates->hourlyRate, $multiplier, $type);
 
             if ($amount->isZero()) {
                 continue;
@@ -105,23 +108,23 @@ final class OvertimeCalculator implements OvertimeCalculatorContract
 
             $lines[] = new PayrollLine(
                 type: 'earning',
-                label: $this->labelFor($entry),
+                label: $type->label(),
                 amount: $amount,
                 taxable: $entry->taxable,
                 metadata: TraceMetadata::line(
                     source: 'overtime_calculator',
-                    appliedRule: strtolower($entry->type),
-                    formula: $entry->type === 'night_differential'
+                    appliedRule: $type->value,
+                    formula: $type === OvertimeType::NightDifferential
                         ? 'hourly_rate * hours * night_differential_multiplier'
                         : 'hourly_rate * hours * overtime_multiplier',
                     basis: [
                         'hourly_rate' => $rates->hourlyRate,
                         'hours' => $entry->hours,
-                        'multiplier' => $entry->multiplier ?? $this->defaultMultiplier($company, $entry->type),
+                        'multiplier' => $multiplier,
                     ],
                     extra: [
                         'hours' => $entry->hours,
-                        'multiplier' => $entry->multiplier ?? $this->defaultMultiplier($company, $entry->type),
+                        'multiplier' => $multiplier,
                         'night_differential' => $entry->nightDifferential,
                     ],
                 ),
@@ -146,18 +149,18 @@ final class OvertimeCalculator implements OvertimeCalculatorContract
      * - use the overtime entry multiplier when explicitly provided
      * - otherwise fall back to the company default multiplier for the entry type
      */
-    private function computeAmount(CompanyProfile $company, OvertimeEntry $entry, Money $hourlyRate): Money
+    private function computeAmount(CompanyProfile $company, OvertimeEntry $entry, Money $hourlyRate, float $multiplier, OvertimeType $type): Money
     {
-        if ($entry->type === 'night_differential') {
+        if ($type === OvertimeType::NightDifferential) {
             return MoneyHelper::multiply(
                 MoneyHelper::multiply($hourlyRate, $entry->hours),
-                $entry->multiplier ?? $company->nightShiftDifferentialPremium
+                $multiplier
             );
         }
 
         $amount = MoneyHelper::multiply(
             MoneyHelper::multiply($hourlyRate, $entry->hours),
-            $entry->multiplier ?? $this->defaultMultiplier($company, $entry->type)
+            $multiplier
         );
 
         if ($entry->nightDifferential) {
@@ -176,33 +179,39 @@ final class OvertimeCalculator implements OvertimeCalculatorContract
      * Returns the company default overtime multiplier for a given overtime type.
      *
      * The company premium settings are stored as decimal multipliers such as
-     * `1.25` for 125% or `3.38` for rest-day holiday overtime.
+     * `1.25` for 125% or `2.60` for regular holiday overtime.
      */
-    private function defaultMultiplier(CompanyProfile $company, string $type): float
+    private function defaultMultiplier(CompanyProfile $company, OvertimeType $type): float
     {
-        return match (strtolower($type)) {
-            'rest_day', 'special_holiday' => $company->restDayOtPremium,
-            'regular_holiday', 'holiday' => $company->holidayOtPremium,
-            'rest_day_regular_holiday', 'rest_day_holiday' => $company->restDayHolidayOtPremium,
-            default => $company->workDayOtPremium,
+        return match ($type) {
+            OvertimeType::Regular => $company->workDayOtPremium,
+            OvertimeType::RestDay => $company->restDayOtPremium,
+            OvertimeType::RegularHoliday => $company->regularHolidayOtPremium,
+            OvertimeType::SpecialNonWorkingDay => $company->specialNonWorkingDayOtPremium,
+            OvertimeType::SpecialWorkingHoliday => $company->specialWorkingHolidayOtPremium,
+            OvertimeType::NightDifferential => $company->nightShiftDifferentialPremium,
         };
     }
 
-    /**
-     * Returns the human-readable payroll line label for an overtime entry.
-     *
-     * This keeps the resulting payroll register and payslip readable without
-     * leaking the raw internal overtime type values.
-     */
-    private function labelFor(OvertimeEntry $entry): string
+    private function resolvedMultiplier(CompanyProfile $company, OvertimeEntry $entry, OvertimeType $type): float
     {
-        return match (strtolower($entry->type)) {
-            'rest_day' => 'Rest Day Overtime',
-            'special_holiday' => 'Special Holiday Overtime',
-            'regular_holiday' => 'Regular Holiday Overtime',
-            'rest_day_regular_holiday' => 'Rest Day + Regular Holiday Overtime',
-            'night_differential' => 'Night Differential',
-            default => 'Overtime Pay',
-        };
+        return $entry->multiplier ?? $this->defaultMultiplier($company, $type);
+    }
+
+    private function typeFor(OvertimeEntry $entry): OvertimeType
+    {
+        $type = OvertimeType::normalize($entry->type);
+
+        if ($type === null) {
+            throw new InvalidPayrollData(
+                sprintf(
+                    'Unsupported overtime type "%s". Supported overtime types: %s.',
+                    $entry->type,
+                    implode(', ', OvertimeType::values()),
+                )
+            );
+        }
+
+        return $type;
     }
 }

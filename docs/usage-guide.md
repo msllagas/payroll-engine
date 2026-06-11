@@ -213,6 +213,8 @@ The default workflow supports:
 - undertime deductions
 - absence deductions
 
+Supported default overtime types are `regular`, `rest_day`, `regular_holiday`, `special_non_working_day`, `special_working_holiday`, and `night_differential`.
+
 If attendance must be present for a client or employee, use runtime `edge_case_policy` values such as:
 
 ```php

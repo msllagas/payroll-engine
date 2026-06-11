@@ -93,6 +93,30 @@ final readonly class CompanyProfileNormalizer
             'admin_users',
             'adminUsers',
         ], []));
+        $workDayOtPremium = $this->premium($company, ['work_day_ot_premium', 'workDayOtPremium'], $defaults, 'work_day_ot_premium', 1.25);
+        $restDayOtPremium = $this->premium($company, ['rest_day_ot_premium', 'restDayOtPremium'], $defaults, 'rest_day_ot_premium', 1.69);
+        $regularHolidayOtPremium = $this->premium(
+            $company,
+            ['regular_holiday_ot_premium', 'regularHolidayOtPremium', 'holiday_ot_premium', 'holidayOtPremium'],
+            $defaults,
+            ['regular_holiday_ot_premium', 'holiday_ot_premium'],
+            2.60,
+        );
+        $specialNonWorkingDayOtPremium = $this->premium(
+            $company,
+            ['special_non_working_day_ot_premium', 'specialNonWorkingDayOtPremium'],
+            $defaults,
+            'special_non_working_day_ot_premium',
+            1.69,
+        );
+        $specialWorkingHolidayOtPremium = $this->premium(
+            $company,
+            ['special_working_holiday_ot_premium', 'specialWorkingHolidayOtPremium'],
+            $defaults,
+            'special_working_holiday_ot_premium',
+            1.25,
+        );
+        $nightShiftDifferentialPremium = $this->premium($company, ['night_shift_differential_premium', 'nightShiftDifferentialPremium'], $defaults, 'night_shift_differential_premium', 0.10);
 
         return new CompanyProfile(
             name: (string) $this->reader->get($company, ['name', 'company_name', 'companyName'], 'Payroll Company'),
@@ -109,11 +133,12 @@ final readonly class CompanyProfileNormalizer
             pagIbigContributionSchedule: $this->resolvePagIbigContributionSchedule($company, $defaults, $splitMonthlyStatutoryAcrossPeriods, $pagIbigContributionMode),
             taxStrategy: TaxStrategy::from((string) $this->reader->get($company, ['tax_strategy', 'taxStrategy'], $defaults['tax_strategy'])),
             annualBonusTaxShield: MoneyHelper::fromNumeric($this->reader->get($company, ['annual_bonus_tax_shield', 'annualBonusTaxShield'], $defaults['annual_bonus_tax_shield'])),
-            workDayOtPremium: $this->asPremium($this->reader->get($company, ['work_day_ot_premium', 'workDayOtPremium'], $defaults['work_day_ot_premium'] ?? 1.25)),
-            restDayOtPremium: $this->asPremium($this->reader->get($company, ['rest_day_ot_premium', 'restDayOtPremium'], $defaults['rest_day_ot_premium'] ?? 1.69)),
-            holidayOtPremium: $this->asPremium($this->reader->get($company, ['holiday_ot_premium', 'holidayOtPremium'], $defaults['holiday_ot_premium'] ?? 2.60)),
-            restDayHolidayOtPremium: $this->asPremium($this->reader->get($company, ['rest_day_holiday_ot_premium', 'restDayHolidayOtPremium'], $defaults['rest_day_holiday_ot_premium'] ?? 3.38)),
-            nightShiftDifferentialPremium: $this->asPremium($this->reader->get($company, ['night_shift_differential_premium', 'nightShiftDifferentialPremium'], $defaults['night_shift_differential_premium'] ?? 0.10)),
+            workDayOtPremium: $workDayOtPremium,
+            restDayOtPremium: $restDayOtPremium,
+            regularHolidayOtPremium: $regularHolidayOtPremium,
+            specialNonWorkingDayOtPremium: $specialNonWorkingDayOtPremium,
+            specialWorkingHolidayOtPremium: $specialWorkingHolidayOtPremium,
+            nightShiftDifferentialPremium: $nightShiftDifferentialPremium,
             preparedBy: $preparedBy,
             approvers: is_array($approvers) ? $approvers : [],
             administrators: $administrators,
@@ -213,5 +238,29 @@ final readonly class CompanyProfileNormalizer
         }
 
         return $premium;
+    }
+
+    /**
+     * @param  array<int, string>  $keys
+     * @param  array<string, mixed>  $defaults
+     * @param  array<int, string>|string  $defaultKeys
+     */
+    private function premium(mixed $company, array $keys, array $defaults, array|string $defaultKeys, float $fallback): float
+    {
+        $value = $this->reader->get($company, $keys);
+
+        foreach ((array) $defaultKeys as $defaultKey) {
+            if ($value !== null && $value !== '') {
+                break;
+            }
+
+            $value = $defaults[$defaultKey] ?? null;
+        }
+
+        if ($value === null || $value === '') {
+            $value = $fallback;
+        }
+
+        return $this->asPremium($value);
     }
 }

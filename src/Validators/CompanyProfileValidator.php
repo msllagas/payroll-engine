@@ -28,8 +28,9 @@ final class CompanyProfileValidator
         foreach ([
             'work day OT premium' => $company->workDayOtPremium,
             'rest day OT premium' => $company->restDayOtPremium,
-            'holiday OT premium' => $company->holidayOtPremium,
-            'rest day + holiday OT premium' => $company->restDayHolidayOtPremium,
+            'regular holiday OT premium' => $company->regularHolidayOtPremium,
+            'special non-working day OT premium' => $company->specialNonWorkingDayOtPremium,
+            'special working holiday OT premium' => $company->specialWorkingHolidayOtPremium,
             'night differential premium' => $company->nightShiftDifferentialPremium,
         ] as $label => $value) {
             if ($value < 0) {
