@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com-personal/quillbytes/payroll-engine/compare/v1.3.0...v3.0.0) (2026-06-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* overtime types `holiday`, `special_holiday`,
+`rest_day_holiday`, and `rest_day_regular_holiday` are no longer
+accepted by the default payroll engine. Use `regular_holiday`,
+`special_non_working_day`, or `special_working_holiday` instead.
+* company holiday overtime policy now uses
+`regular_holiday_ot_premium`, `special_non_working_day_ot_premium`,
+and `special_working_holiday_ot_premium` as the documented defaults.
+
+### Features
+
+* add label() method to PayrollFrequency for human-readable API responses ([#8](https://github.com-personal/quillbytes/payroll-engine/issues/8)) ([e16a62a](https://github.com-personal/quillbytes/payroll-engine/commit/e16a62aafecfa3e1fec1d5ec92b686737d1ac6ac))
+* enforce exact holiday overtime types ([#9](https://github.com-personal/quillbytes/payroll-engine/issues/9)) ([3161a19](https://github.com-personal/quillbytes/payroll-engine/commit/3161a191cf3bd34ab44ce56fdd474e1acd47c667))
+
 ## [2.0.0](https://github.com-personal/quillbytes/payroll-engine/compare/v1.3.0...v2.0.0) (2026-06-11)
 
 
